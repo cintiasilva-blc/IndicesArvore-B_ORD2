@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from struct import calcsize, unpack, pack
 import io
 import sys
+import operacoes
 
 ORDEM = 5 # Num. máx. de refeências = Num. máx. de descendentes
 
@@ -147,7 +148,7 @@ def buscaNaArvore(arvB, chave: int, rrn):
             return True, rrn, pos
         else:
             # busca na pagina filha
-            return buscaNaArvore(chave, pag.filhos[pos])
+            return buscaNaArvore(arvB,chave, pag.filhos[pos])
         
 # ================== INSERÇÃO, DIVISÃO E PROMOÇÃO =====================
 
@@ -160,19 +161,19 @@ def insereChavePromo(chave: int, offset: int, filhoD: int, pag: Pagina):
     i = pag.numChaves
     while i > 0 and chave < pag.chaves[i-1]:
         pag.chaves[i] = pag.chaves[i-1]
-        pag.filhos[i+1] = pag.filhos[i]
         pag.offsets[i] = pag.offsets[i - 1]
+        pag.filhos[i+1] = pag.filhos[i]
         i -= 1
     pag.chaves[i] = chave
-    pag.filhos[i+1] = filhoD
     pag.offsets[i] = offset
+    pag.filhos[i+1] = filhoD
     pag.numChaves += 1
 
-def divide(chave: int, offset, filhoD: int, pag: Pagina, arvB):
+def divide(arvB, chave: int, offset: int, filhoD: int, pag: Pagina):
 
     # insere chave, offset e filhoD em pag
     insereChavePromo(chave, offset, filhoD, pag)
-    meio = ORDEM // 2                   # meio recebe ORDEM // 2
+    meio = ORDEM // 2          
 
     # chavePro recebe pag.chaves[meio]
     chavePro = pag.chaves[meio]         
@@ -194,28 +195,24 @@ def divide(chave: int, offset, filhoD: int, pag: Pagina, arvB):
     # pNova recebe o conteúdo de pag até meio+1
     pNova = Pagina()
     j = 0
-    for i in range(meio + 1, pag.numChaves):
+    for i in range(meio + 1, ORDEM):
         pNova.chaves[j] = pag.chaves[i]
         pNova.offsets[j] = pag.offsets[i]
         j += 1
     j = 0
-    for i in range(meio + 1, pag.numChaves + 1):
+    for i in range(meio + 1, ORDEM + 1):
         pNova.filhos[j] = pag.filhos[i]
         j += 1
     pNova.numChaves = pag.numChaves - meio - 1
 
     return chavePro, offsetPro, filhoDpro, pAtual, pNova
 
-def insereChave(chave, offset, rrn:int, arvB):
-    '''Insere uma chave na árvore B.'''
-
+def insereChave(arvB, chave: int, offset: int, rrnAtual: int):
     # Se a chave for inserida com sucesso, a função retorna Verdadeiro, o RRN da página onde a chave foi inserida, e a posição da chave.
     # Se a chave não for inserida, a função retorna Falso, nulo, e nulo.
 
-def insereChave(arvB, chave: int, offset: int, rrnAtual: int):
-
     # condição de parada da recursão
-    if rrnAtual == -1:
+    if rrnAtual == None:
         chavePro = chave
         offsetPro = offset
         filhoDPro = -1
@@ -224,8 +221,7 @@ def insereChave(arvB, chave: int, offset: int, rrnAtual: int):
         pag = lePagina(arvB, rrnAtual)
         achou, pos = buscaNaPagina(chave, pag)
         if achou:
-            print(f'Erro: chave "{chave}" duplicada.')
-            return None, None, None, False
+            raise ValueError("Chave Duplicada!")
         chavePro, offsetPro, filhoDPro, promo = insereChave(arvB,chave,offset,pag.filhos[pos])
         if not promo:
             return None, None, None, False
@@ -254,7 +250,7 @@ def insereNaArvore(arvB, chave: int, offset: int, raiz:int):
         # filho Dir
         pNova.filhos[1] = filhoDPro
         
-        pNova.numChaves = 1
+        pNova.numChaves += 1
         raiz = novoRRN(arvB)
         escrevePagina(arvB, raiz, pNova)
     return raiz
@@ -290,18 +286,54 @@ def imprimeArvoreB(nomeArqB:str):
     except FileNotFoundError:
         print(f'Erro: arquivo "{nomeArqB}" não encontrado.')
 
+# ============================= CRIA INDICE ==========================
+
+def criaIndice():
+    try:
+        gamesDat = open("games.dat", "rb")
+    except FileNotFoundError:
+        print("Erro: não foi possível abrir o arquivo games.dat!")
+        return
+    arvB = open("btree.dat", "w+b")
+
+    # árvore inicialmente vazia
+    raiz = -1
+    escreveCabecalho(arvB, raiz)
+
+    fimArq = False
+    while not fimArq:
+        #offset do próximo registro
+        offset = gamesDat.tell()
+        # lê um registro
+        chave, fimArquivo = operacoes.leRegistros(gamesDat)
+        if not fimArquivo:
+            raiz = insereNaArvore(arvB,chave,offset,raiz)
+    # atualiza o cabeçalho
+    escreveCabecalho(arvB, raiz)
+
+    print("Índice criado com sucesso.")
 
 def main()-> None:
     '''Função responsável por abrir ou criar o arquivo da arvoreB e chamar a inserção.'''
     # Abre o arquivo para ser utilizado nas funções
     if len(sys.argv) < 2:
-        print('Uso: python programa.py -b | -e arquivoOperacoes | -c')
+        print("Uso: python programa.py -b | -e arquivoOperacoes | -p")
         return
-    
+
     flag = sys.argv[1]
+
+    if flag == "-b":
+        criaIndice()
+    elif flag == "-e":
+        if len(sys.argv) < 3:
+            print("Informe o arquivo de operações.")
+            return
+        operacoes.executaOperacoes(sys.argv[2])
+    elif flag == "-p":
+        imprimeArvoreB()
+    else:
+        print("Opção inválida.")
     
-
-
 
 if __name__ == "__main__":
     main()

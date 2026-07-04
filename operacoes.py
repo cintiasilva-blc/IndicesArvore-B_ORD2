@@ -1,5 +1,31 @@
 import programa
 
+def leRegistros(nomeArq) -> list[tuple[str, int]]:
+    '''Percorre o arquivo inteiro e retorna todos os registros.
+    Para cada registro, lê 2 bytes para saber o tamanho e adiciona a string do registro e seu offset na lista de retorno.
+    Exemplos:
+    >>> registros = leRegistros('games.dat')
+    >>> registros[0]
+    ('484|The Legend of Zelda: Breath of the Wild|2017|Action-Adventure|Nintendo|Nintendo Switch|', 0)
+    >>> registros[1]
+    ('348|Tetris|1985|Puzzle|Nintendo|Game Boy|', 93)
+    '''
+    with open(nomeArq, 'rb') as arq: # abre o arquivo 'nome_arq' para leitura  
+        registros = []
+
+        off_set = arq.tell() # posição onde o registro começa
+        tam_b = arq.read(2) # le dois bytes do arquivo que indicam o tamanho total do registro
+        tam = int.from_bytes(tam_b, 'little') # converte o tam_b de byte para inteiro
+
+        while len(tam_b) == 2: 
+            reg = arq.read(tam) # lê um registro
+            reg_str = reg.decode() # tranforma bytes => string
+            registros.append((reg_str, off_set)) # retorna uma lista de tuplas com o offset e o registro
+            off_set = arq.tell() # posição onde o registro começa
+            tam_b = arq.read(2) # le dois bytes do arquivo, sendo esses o tamanho do registro
+            tam = int.from_bytes(tam_b, 'little') # transforma o tam do registro de byte para inteiro        
+        return registros
+
 def escreverRegistro(arq, campos:list[str]) -> int:
     '''Recebe um arquivo e uma lista de campos do registro, monta a string do registro,
     calcula o tamanho e escreve os 2 bytes de tamanhos seguidos do conteúdo no arquivo. '''
@@ -25,7 +51,7 @@ def inserirRegistro(campos, nomeArq):
         escreverRegistro(arq, campos) # escreve o novo registro no final do arq
 
 
-def executar_operacoes(nomeArquivo:str, nomeArqOperacoes:str):
+def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
     with open(nomeArqOperacoes, 'r') as arq:
         # encontra o primeiro espaço para separar o identificador do argumento
@@ -66,5 +92,5 @@ def executar_operacoes(nomeArquivo:str, nomeArqOperacoes:str):
 if __name__ == '__main__':
     nomeArquivo = 'games.dat'
     nomeArqOperacoes = 'operacoes.txt'
-    executar_operacoes(nomeArquivo, nomeArqOperacoes)
+    executaOperacoes(nomeArquivo, nomeArqOperacoes)
  

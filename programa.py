@@ -1,9 +1,10 @@
-import sys
 from dataclasses import dataclass
 from struct import calcsize, unpack, pack
 import io
+import sys
 
 ORDEM = 5 # Num. máx. de refeências = Num. máx. de descendentes
+
 FORMATO_PAG = f'i{ORDEM-1}i{ORDEM}i{ORDEM-1}i'
 TAM_PAG = calcsize(FORMATO_PAG)
 FORMATO_CAB = 'i'
@@ -12,34 +13,56 @@ TAM_CAB = calcsize(FORMATO_CAB)
 class Pagina: 
     def __init__(self) -> None:
         self.numChaves: int = 0
-        self.chaves: list = [None] * (ORDEM - 1)
-        self.filhos: list = [None] * ORDEM
-        ### espaço para adicionar os byte-offsets dos reg.
-        self.offsets: list = [None] * (ORDEM - 1)
+        self.chaves: list = [None] * (ORDEM - 1)    # NUM. MAXIMO DE CHAVES
+        self.filhos: list = [None] * ORDEM          # NUM. MAX DE FILHOS
+        # espaço para adicionar os byte-offsets dos reg.
+        self.offsets: list = [None] * (ORDEM - 1)   # NUM. MAXIMO DE CHAVES
 
+# Abre o arquivo para ser utilizado nas funções
 arq = open("games.dat", 'rb+')
+arvB = open("btree.dat", 'wb+')
 
 # =========================== BUSCA ===============================
 def lePagina(rrn: int) -> Pagina:
     
     global arvB
-    offset = rrn * TAM_PAG + TAM_CAB
-    arvB.seek(offset, io.SEEK_SET)
+    
+    # calcula o byte-offset da página a partir de *rrn*
+    offset = rrn * TAM_PAG + TAM_CAB 
+    # faz seek no arquivo árvore-B para o byte-offset calculado
+    arvB.seek(offset, io.SEEK_SET) 
+    # lê do arquivo arvB para pag
     pag_bytes = arvB.read(TAM_PAG)
     elementos_pag = unpack(FORMATO_PAG, pag_bytes)
     nova_pag = Pagina()
+
     # fatia a lista e guarda nos elementos da nova_pag
-    return nova_pag 
-
-
+    nova_pag.numChaves = elementos_pag[0]
+    nova_pag.chaves[elementos_pag[1:ORDEM]]
+    nova_pag.filhos[elementos_pag[ORDEM:2*ORDEM]]
+    nova_pag.offsets[elementos_pag[2*ORDEM:3*ORDEM]]
+    
+    return nova_pag
 
 def escrevePagina(rrn: int, pag: Pagina) -> None:
 
-    byteOffset = rrn * TAM_PAG + TAM_CAB
-    arq.seek(byteOffset, io.SEEK_SET)
-    pag_bytes = arvB.write(pack(FORMATO_PAG, pag.numChaves, pag.chaves, pag.filhos, pag.offsets))
+    global arvB
 
+    # calcula o byte-offset da página a partir do *rrn*
+    offset = rrn * TAM_PAG + TAM_CAB
+    # faz seek no arquivo árvore-B para o byte-offset calculado
+    arvB.seek(offset, io.SEEK_SET)
 
+    # escreve pag_bytes no arquivo arvB
+    valores = ([pag.numChaves] + 
+            pag.chaves +
+            pag.filhos + 
+            pag.offsets)
+    
+    valores = [-1 if v is None else v for v in valores] # list comprehension que subistiui None por -1, pois pack() só aceita inteiros
+
+    pag_bytes = pack(FORMATO_PAG, *valores) # * desempacota a lista como argumentos posicionais
+    arvB.write(pag_bytes)
 
 def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
     '''Busca *chave* em *pag* (busca a chave internamente na pagina)
@@ -60,10 +83,8 @@ def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
 
 
 def buscaNaArvore(chave: int, rrn):
-    '''Busca *chave* na Arvore-B
-    Exemplos:'''
 
-    if rrn == None:              
+    if rrn == None:                # CASO BASE, condição de parada da recusão
         return False, None, None
     else:
         pag = lePagina(rrn)
@@ -74,40 +95,50 @@ def buscaNaArvore(chave: int, rrn):
         else:
             # busca na pagina filha
             return buscaNaArvore(chave, pag.filhos[pos])
-
-def divide(chave: tuple[int,int], filhoD: tuple[int,int], pag: Pagina):
-    '''Divide uma página da árvore B e retorna a chave promovida, o RRN do filho direito promovido, a página dividida, e a nova página.'''
-
-    insereChavePromo(chave, filhoD, pag)
-    meio = pag.numChaves // 2
-    chavePro = pag.chaves[meio]
-    filhoDPro = novoRRN()
-    pAtual = pag.chaves[:meio]
-    pNova = pag.chaves[meio+1:]
-    return chavePro, filhoDPro, pAtual, pNova
-
-def novoRRN():
-    '''Gera um novo RRN que a pNova terá no arquico arvore-b.'''
-    arvB.seek(0, 2)
+        
+# ================== INSERÇÃO, DIVISÃO E PROMOÇÃO =====================
+def novoRRN() -> int:
+    arvB.seek(io.SEEK_END)
     offset = arvB.tell()
-    FMT_PAG = f'{ORDEM - 1}i{ORDEM - 1}i{ORDEM}i'
-    TAM_PAG = Pagina.calcsize(FMT_PAG)
-    FMT_CAB = 'i'
-    TAM_CAB = Pagina.calcsize(FMT_CAB)
     return (offset - TAM_CAB) // TAM_PAG
 
-    
-def buscaNaPagina(chave:int, pag:Pagina):
-    '''Busca uma chave em uma página da árvore B e retorna Verdadeiro e a posição da chave se encontrada, ou Falso e pos contrário.'''
 
-    pos = 0
-    while pos < pag.numChaves and chave > pag.chaves[pos]:
-        pos += 1
-    if pos < pag.numChaves and chave == pag.chaves[pos]:
-        return True, pos
-    else:
-        return False, pos
-    
+def insereChavePromo(chave: int, filhoD: int, pag: Pagina) -> Pagina:
+    if pag.numChaves == (ORDEM - 1):
+        pag.chaves.append(None)
+        pag.filhos.append(None)
+
+    i = pag.numChaves
+    while i > 0 and chave < pag.chaves[i-1]:
+        pag.chaves[i] = pag.chaves[i-1]
+        pag.filhos[i+1] = pag.filhos[i]
+        i -= 1
+    pag.chaves[i] = chave
+    pag.filhos[i+1] = filhoD
+    pag.numChaves += 1
+
+def divide(chave: int, filhoD: int, pag: Pagina) -> tuple[int, int, Pagina, Pagina]:
+    pNova = insereChavePromo(chave, filhoD, pag)
+    meio = ORDEM // 2
+    chavePro = pag.chaves[meio]
+    filhoDpro = novoRRN()
+
+    # pAtual recebe o conteúdo de pag até meio
+    pAtual = Pagina()
+    pAtual.numChaves = meio
+    pAtual.chaves = pag.chaves[:meio] + [None] * (ORDEM - 1 - meio)
+    pAtual.filhos = pag.filhos[:meio + 1] + [None] * (ORDEM - meio - 1)
+    pAtual.offsets = pag.offsets[:meio] + [None] * (ORDEM - 1 - meio)
+
+    # pNova recebe o conteúdo de pag até meio+1
+    pNova = Pagina()
+    pNova.numChaves = ORDEM - meio - 1
+    pNova.chaves = pag.chaves[meio + 1:] + [None] * meio
+    pNova.filhos = pag.filhos[meio + 1:] + [None] * meio
+    pNova.offsets = pag.offsets[meio + 1:] + [None] * meio
+
+    return chavePro, filhoDpro, pAtual, pNova
+
 def insereChave(chave:tuple[int,int], rrn:int):
     '''Insere uma chave na árvore B.'''
 

@@ -259,37 +259,6 @@ def insereNaArvore(arvB, chave: int, offset: int, raiz:int):
         escrevePagina(arvB, raiz, pNova)
     return raiz
 
-#===================== Impressão da arvore B ==========================
-def imprimeArvoreB(nomeArqB:str):
-    "Le o arquivo btree.dat e faz a impressão da arvore B, pela ordem de seu RRN, além disso, a raiz deve ser devidamente identificada."    
-    try: #se o arquvivo não exister ele coloca uma mensagem de erro
-        with open(nomeArqB, 'rb') as arq:
-            #le o cabecalho
-            cab_bytes = arq.read(TAM_CAB)
-            cabecalho = unpack(FORMATO_CAB, cab_bytes) #transforma os bytes para inteiros
-            rrn_raiz = cabecalho[0] #permite identificar a raiz , pq o rrn da raiz é o primeiro elemento do cabecalho
-            
-            #calcula o número de páginas no arquivo
-            arq.seek(0, io.SEEK_END)
-            tam_arq = arq.tell()
-            num_pag = (tam_arq - TAM_CAB) // TAM_PAG
-            
-            #percorre as paginas em ordem de rrn e imprime as chaves, offsets e filhos de cada página, além de identificar a raiz
-            for rrn in range(num_pag):
-                offset = TAM_CAB + rrn * TAM_PAG #calcula a posicao da pag em especifico
-                arq.seek(offset,io.SEEK_SET)
-                pag_bytes = arq.read(TAM_PAG) #le a pag
-                chaves, offsets, filhos = unpack(FORMATO_PAG, pag_bytes)
-                
-                if rrn == rrn_raiz:
-                    print('-------------- Raiz --------------')
-                    
-                print(f'Página <{rrn}>:\n\tChaves: {chaves}\n\tOffsets: {offsets}\n\tFilhos: {filhos}')
-                print('----------------------------------')
-
-    except FileNotFoundError:
-        print(f'Erro: arquivo "{nomeArqB}" não encontrado.')
-
 def main()-> None:
     '''Função responsável por abrir ou criar o arquivo da arvoreB e chamar a inserção.'''
     # Abre o arquivo para ser utilizado nas funções

@@ -107,7 +107,6 @@ def insereChavePromo(chave: int, filhoD: int, pag: Pagina) -> Pagina:
         pag.chaves.append(None)
         pag.filhos.append(None)
 
-
     i = pag.numChaves
     while i > 0 and chave < pag.chaves[i-1]:
         pag.chaves[i] = pag.chaves[i-1]

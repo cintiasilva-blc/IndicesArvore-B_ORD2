@@ -41,7 +41,7 @@ def escreverRegistro(arq, campos:list[str]) -> int:
 
     return 2 + tam # retorna o total de bytes escritos
 
-def inserirRegistro(campos, nomeArq):
+def inserirRegistro(campos, nomeArq) -> int:
     ''' Insere um novo registro no final do arquivo games.dat'''
     id = int(campos[0])
 
@@ -49,6 +49,7 @@ def inserirRegistro(campos, nomeArq):
         arq.seek(0, 2) #vai para o final do arq
         offset = arq.tell() # offset do novo registro
         escreverRegistro(arq, campos) # escreve o novo registro no final do arq
+    return offset
 
 
 def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):

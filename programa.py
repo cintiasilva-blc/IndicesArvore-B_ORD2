@@ -22,14 +22,19 @@ class Pagina:
 # ============================ CABEÇALHO ==============================
 
 def leCabecalho(arvB) -> int:
-    '''Retorna o *rrn* da página raiz (-1 se *arvB* estiver vazia.)'''
+    '''Retorna o *rrn* da página raiz (None se *arvB* estiver vazia.)'''
 
     arvB.seek(0, io.SEEK_SET)
     rrn = unpack(FORMATO_CAB, arvB.read(TAM_CAB))[0]
+
+    if rrn == -1:
+        return None
     return rrn
 
 def escreveCabecalho(arvB, rrn: int) -> None:
 
+    if rrn == None:
+        rrn = -1
     arvB.seek(0, io.SEEK_SET)
     cab_bytes = pack(FORMATO_CAB, rrn)
     arvB.write(cab_bytes)
@@ -112,7 +117,7 @@ def escrevePagina(arvB, rrn: int, pag: Pagina) -> None:
 
 def novoRRN(arvB) -> int:
 
-    arvB.seek(io.SEEK_END)
+    arvB.seek(0, io.SEEK_END)
     offset = arvB.tell()
     return (offset - TAM_CAB) // TAM_PAG
 
@@ -139,13 +144,13 @@ def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
 def buscaNaArvore(arvB, chave: int, rrn):
 
     if rrn == None:                # CASO BASE, condição de parada da recusão
-        return False, None, None
+        return False, None
     else:
         pag = lePagina(arvB, rrn)
         achou, pos = buscaNaPagina(chave, pag)
         # pos recebe a posição em que a *chave* ocorre em *pag*
         if achou:
-            return True, rrn, pos
+            return True, pag.offsets[pos]
         else:
             # busca na pagina filha
             return buscaNaArvore(arvB,chave, pag.filhos[pos])
@@ -272,15 +277,12 @@ def imprimeArvoreB(nomeArqB:str):
             
             #percorre as paginas em ordem de rrn e imprime as chaves, offsets e filhos de cada página, além de identificar a raiz
             for rrn in range(num_pag):
-                offset = TAM_CAB + rrn * TAM_PAG #calcula a posicao da pag em especifico
-                arq.seek(offset,io.SEEK_SET)
-                pag_bytes = arq.read(TAM_PAG) #le a pag
-                chaves, offsets, filhos = unpack(FORMATO_PAG, pag_bytes)
+                pag = lePagina(nomeArqB, rrn)
                 
                 if rrn == rrn_raiz:
                     print('-------------- Raiz --------------')
                     
-                print(f'Página <{rrn}>:\n\tChaves: {chaves}\n\tOffsets: {offsets}\n\tFilhos: {filhos}')
+                print(f'Página <{rrn}>:\n\tChaves: {pag.chaves}\n\tOffsets: {pag.offsets}\n\tFilhos: {pag.filhos}')
                 print('----------------------------------')
 
     except FileNotFoundError:
@@ -297,7 +299,7 @@ def criaIndice():
     arvB = open("btree.dat", "w+b")
 
     # árvore inicialmente vazia
-    raiz = -1
+    raiz = None
     escreveCabecalho(arvB, raiz)
 
     fimArq = False
@@ -305,8 +307,11 @@ def criaIndice():
         #offset do próximo registro
         offset = gamesDat.tell()
         # lê um registro
-        chave, fimArquivo = operacoes.leRegistros(gamesDat)
-        if not fimArquivo:
+        registros = operacoes.leRegistros("games.dat")
+        for registro, offset in registros:
+            chave = int(registro.split('|')[0])
+            raiz = insereNaArvore(arvB, chave, offset, raiz)
+        if not fimArq:
             raiz = insereNaArvore(arvB,chave,offset,raiz)
     # atualiza o cabeçalho
     escreveCabecalho(arvB, raiz)
@@ -328,9 +333,9 @@ def main()-> None:
         if len(sys.argv) < 3:
             print("Informe o arquivo de operações.")
             return
-        operacoes.executaOperacoes(sys.argv[2])
+        operacoes.executaOperacoes("games.dat", sys.argv[2])
     elif flag == "-p":
-        imprimeArvoreB()
+        imprimeArvoreB("btree.dat")
     else:
         print("Opção inválida.")
     

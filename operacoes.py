@@ -26,14 +26,15 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
             tam = int.from_bytes(tam_b, 'little') # transforma o tam do registro de byte para inteiro        
         return registros
 
-def le_registro(arq, offset: int) -> tuple[str, int]:
-    '''Lê um único registro a partir de um byte-offset, em um arquivo já aberto para leitura.
+def le_registro(nomeArq, offset: int) -> tuple[str, int]:
+    '''Lê um único registro a partir de um byte-offset.
     Retorna a string do registro e o total de bytes ocupados (2 bytes do tamanho + o registro em si).'''
-    arq.seek(offset)
-    tam_b = arq.read(2)
-    tam = int.from_bytes(tam_b, 'little')
-    reg = arq.read(tam)
-    reg_str = reg.decode()
+    with open(nomeArq, 'rb') as arq:
+        arq.seek(offset)
+        tam_b = arq.read(2)
+        tam = int.from_bytes(tam_b, 'little')
+        reg = arq.read(tam)
+        reg_str = reg.decode()
     return reg_str, 2 + tam
 
 
@@ -62,19 +63,10 @@ def inserirRegistro(campos, nomeArq) -> tuple[int, int]:
     return offset, tam_total
 
 
-
 def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
-    try:
-        testeArvB = open(nomeArvB, 'rb')
-        testeArvB.close()
-        testeArq = open(nomeArq, 'rb')
-        testeArq.close()
-    except FileNotFoundError:
-        print(f'Erro: os arquivos "{nomeArvB}" e/ou "{nomeArq}" não existem.')
-        return
     
-    with open(nomeArqOperacoes, 'r') as arq, open(nomeArvB, 'rb') as arvB:
+    with open(nomeArqOperacoes, 'r') as arq, open(nomeArvB, 'r+b') as arvB:
         raiz = programa.leCabecalho(arvB)
         # encontra o primeiro espaço para separar o identificador do argumento
         for linha in arq:
@@ -94,36 +86,39 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
 
             if op == 'b': #busca
                 id = int(arg)
-                print(f'Busca pelo registro de chave "{id}"')
+                print(f'\nBusca pelo registro de chave "{id}"')
                 achou, offset = programa.buscaNaArvore(arvB, id, raiz)
                 if achou:
-                    print(reg)
+                    reg_str, tam_total = le_registro(nomeArq, offset)
+                    print(f'{reg_str} ({tam_total} bytes - offset {offset})')
+
                 else:
                     print(f'Erro: chave "{id}" não encontrada.')
                 print()
 
             elif op == 'i': #inserção
-                campos = arg.split('|')[:-1]
+                campos = arg.split('|')
+                if campos and campos[-1] == '':
+                    campos = campos[:-1]
                 id = int(campos[0])
-                offset = programa.buscaNaArvore(nomeArvB, id, raiz)
-                if offset != None:
+ 
+                achou, _ = programa.buscaNaArvore(arvB, id, raiz)
+                if achou:
+                    print(f'Inserção do registro de chave "{id}"')
                     print(f'Erro: chave "{id}" duplicada.')
                 else:
                     print(f'Inserção do registro de chave "{id}"')
-                    raiz = programa.insereNaArvore(nomeArvB, id, int(campos[1]), raiz)
-                    inserirRegistro(campos, nomeArquivo)
-                    print(le_registros)
-                    offset = inserirRegistro(campos, nomeArq)
-                    raiz = programa.insereNaArvore(nomeArvB, id, offset, raiz)
+                    offset,tam_total = inserirRegistro(campos, nomeArq)
+                    raiz = programa.insereNaArvore(arvB, id, offset, raiz)
                     programa.escreveCabecalho(arvB, raiz)
+                    reg = f'{campos[0]}|{campos[1]}|{campos[2]}|{campos[3]}|{campos[4]}|{campos[5]}|'
+                    print(f'{reg} ({tam_total} bytes - offset {offset})')
 
                 print()
         print(f'As operações do arquivo "{nomeArqOperacoes}" foram executadas com sucesso!')
 
 if __name__ == '__main__':
     nomeArvB = 'btree.dat'
-    nomeArquivo = 'games.dat'
     nomeArq = 'games.dat'
     nomeArqOperacoes = 'operacoes.txt'
     executaOperacoes(nomeArvB, nomeArq, nomeArqOperacoes)
- 

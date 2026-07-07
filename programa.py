@@ -199,9 +199,9 @@ def insereChavePromo(chave: int, offset: int, filhoD: int, pag: Pagina):
     [10, 20, 30, -1]
     '''
     if pag.numChaves == (ORDEM - 1):
-        pag.chaves.append(-1)
-        pag.filhos.append(-1)
-        pag.offsets.append(-1)
+        pag.chaves.append(None)
+        pag.filhos.append(None)
+        pag.offsets.append(None)
 
     i = pag.numChaves
     while i > 0 and chave < pag.chaves[i-1]:

@@ -263,11 +263,6 @@ def imprimeArvoreB(nomeArqB:str):
             for rrn in range(num_pag):
                 pag = lePagina(arq, rrn)
 
-
-            #le e imprime cada página do arquivo
-            for rrn in range(0, num_pag - 1):
-                pag = lePagina(arq, rrn)
-
                 if rrn == rrn_raiz:
                     print('----------------------- Raiz -----------------------')
                     print(f'Página {rrn}: ')
@@ -331,7 +326,6 @@ def main()-> None:
         if len(sys.argv) < 3:
             print("Informe o arquivo de operações.")
             return
-        operacoes.executaOperacoes("games.dat", sys.argv[2])
         operacoes.executaOperacoes("btree.dat", "games.dat", sys.argv[2])
     elif flag == "-p":
         imprimeArvoreB("btree.dat")

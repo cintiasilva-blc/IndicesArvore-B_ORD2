@@ -11,6 +11,7 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
     ('348|Tetris|1985|Puzzle|Nintendo|Game Boy|', 93)
     '''
     with open(nomeArq, 'rb') as arq: # abre o arquivo 'nome_arq' para leitura  
+    with open(nomeArq, 'rb') as arq: # abre o arquivo 'nomeArq' para leitura  
         registros = []
 
         off_set = arq.tell() # posição onde o registro começa

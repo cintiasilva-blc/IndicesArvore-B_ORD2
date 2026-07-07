@@ -10,7 +10,6 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
     >>> registros[1]
     ('348|Tetris|1985|Puzzle|Nintendo|Game Boy|', 93)
     '''
-    with open(nomeArq, 'rb') as arq: # abre o arquivo 'nome_arq' para leitura  
     with open(nomeArq, 'rb') as arq: # abre o arquivo 'nomeArq' para leitura  
         registros = []
 
@@ -37,8 +36,6 @@ def escreverRegistro(nomeArq, campos:list[str]) -> int:
     tam = len(reg_b) # verifica o tamanho do registro
     tam_b = tam.to_bytes(2, 'little')
 
-    arq.write(tam_b) #escreve o tam do registro
-    arq.write(reg_b) # escreve o rgeistro
     with open(nomeArq, 'rb+') as arq:
         arq.seek(0, 2) # vai para o final do arquivo
         arq.write(tam_b) #escreve o tam do registro
@@ -48,12 +45,10 @@ def escreverRegistro(nomeArq, campos:list[str]) -> int:
 
 def inserirRegistro(campos, nomeArq) -> int:
     ''' Insere um novo registro no final do arquivo games.dat'''
-    id = int(campos[0])
 
     with open(nomeArq, 'rb+') as arq:
         arq.seek(0, 2) #vai para o final do arq
         offset = arq.tell() # offset do novo registro
-        escreverRegistro(arq, campos) # escreve o novo registro no final do arq
     escreverRegistro(arq, campos) # escreve o novo registro no final do arq
     return offset
 

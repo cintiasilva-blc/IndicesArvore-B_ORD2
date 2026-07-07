@@ -22,13 +22,7 @@ class Pagina:
 # ============================ CABEÇALHO ==============================
 
 def leCabecalho(arvB) -> int:
-<<<<<<< Updated upstream
-    '''
-    '''
-
-=======
     '''Retorna o *rrn* da página raiz (None se *arvB* estiver vazia.)'''
->>>>>>> Stashed changes
     arvB.seek(0, io.SEEK_SET)
     rrn = unpack(FORMATO_CAB, arvB.read(TAM_CAB))[0]
     return rrn

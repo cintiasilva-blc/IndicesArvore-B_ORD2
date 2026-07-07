@@ -4,7 +4,7 @@ import io
 import sys
 import operacoes
 
-ORDEM = 10 # Num. máx. de refeências = Num. máx. de descendentes
+ORDEM = 5 # Num. máx. de refeências = Num. máx. de descendentes
 
 FORMATO_PAG = f'i{ORDEM-1}i{ORDEM}i{ORDEM-1}i'
 TAM_PAG = calcsize(FORMATO_PAG)
@@ -199,9 +199,9 @@ def insereChavePromo(chave: int, offset: int, filhoD: int, pag: Pagina):
     [10, 20, 30, -1]
     '''
     if pag.numChaves == (ORDEM - 1):
-        pag.chaves.append(None)
-        pag.filhos.append(None)
-        pag.offsets.append(None)
+        pag.chaves.append(-1)
+        pag.filhos.append(-1)
+        pag.offsets.append(-1)
 
     i = pag.numChaves
     while i > 0 and chave < pag.chaves[i-1]:
@@ -277,12 +277,12 @@ def insereChave(arvB, chave: int, offset: int, rrnAtual: int) -> tuple[int, int,
             raise ValueError("Chave Duplicada!")
         chavePro, offsetPro, filhoDPro, promo = insereChave(arvB,chave,offset,pag.filhos[pos])
         if not promo:
-            return None, None, None, False
+            return -1, -1, -1, False
         else:
             if pag.numChaves < (ORDEM - 1):
                 insereChavePromo(chavePro,offsetPro,filhoDPro,pag)
                 escrevePagina(arvB, rrnAtual, pag)
-                return None, None, None, False
+                return -1, -1, -1, False
             else:
                 chavePro, offsetPro, filhoDPro, pag, novaPag = divide(arvB,chavePro, offsetPro,filhoDPro,pag)
                 escrevePagina(arvB, rrnAtual, pag)

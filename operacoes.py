@@ -99,7 +99,7 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
                 else:
                     print(f'Inserção do registro de chave "{id}"')
                     raiz = programa.insereNaArvore(nomeArvB, id, int(campos[1]), raiz)
-                    programa.inserirRegistro(campos, nomeArquivo)
+                    inserirRegistro(campos, nomeArquivo)
                     print(le_registros)
                     offset = inserirRegistro(campos, nomeArq)
                     raiz = programa.insereNaArvore(nomeArvB, id, offset, raiz)

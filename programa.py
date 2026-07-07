@@ -14,10 +14,10 @@ TAM_CAB = calcsize(FORMATO_CAB)
 class Pagina: 
     def __init__(self) -> None:
         self.numChaves: int = 0
-        self.chaves: list = [None] * (ORDEM - 1)    # NUM. MAXIMO DE CHAVES
-        self.filhos: list = [None] * ORDEM          # NUM. MAX DE FILHOS
+        self.chaves: list = [-1] * (ORDEM - 1)    # NUM. MAXIMO DE CHAVES
+        self.filhos: list = [-1] * ORDEM          # NUM. MAX DE FILHOS
         # espaço para adicionar os byte-offsets dos reg.
-        self.offsets: list = [None] * (ORDEM - 1)   # NUM. MAXIMO DE CHAVES
+        self.offsets: list = [-1] * (ORDEM - 1)   # NUM. MAXIMO DE CHAVES
 
 # ============================ CABEÇALHO ==============================
 
@@ -72,13 +72,10 @@ def escrevePagina(arvB, rrn: int, pag: Pagina) -> None:
 
     # escreve pag_bytes no arquivo arvB
     valores = [pag.numChaves]
-
     for chave in pag.chaves:
         valores.append(chave)
-
     for filho in pag.filhos:
         valores.append(filho)
-
     for off in pag.offsets:
         valores.append(off)
 
@@ -276,15 +273,15 @@ def imprimeArvoreB(nomeArqB:str):
                 if rrn == rrn_raiz:
                     print('----------------------- Raiz -----------------------')
                     print(f'Página {rrn}: ')
-                    print(f'Chaves = {separaLista(pag.chaves)}')
+                    print(f'Chaves =  {separaLista(pag.chaves)}')
                     print(f'Offsets = {separaLista(pag.offsets)}')
-                    print(f'Filhos = {separaLista(pag.filhos)}')
+                    print(f'Filhos =  {separaLista(pag.filhos)}')
                     print('----------------------------------------------------')
                 else:
                     print(f'\nPágina {rrn}: ')
-                    print(f'Chaves = {separaLista(pag.chaves)}')
+                    print(f'Chaves =  {separaLista(pag.chaves)}')
                     print(f'Offsets = {separaLista(pag.offsets)}')
-                    print(f'Filhos = {separaLista(pag.filhos)}')
+                    print(f'Filhos =  {separaLista(pag.filhos)}')
                 print()
 
 

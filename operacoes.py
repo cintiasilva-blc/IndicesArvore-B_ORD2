@@ -65,7 +65,7 @@ def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):
             arg = linha[i + 1:]
             
             #remove o \n do final
-            if arg[-1] == '\n':
+            if arg != "" and arg[-1] == '\n':
                 arg = arg[:-1]
 
             if op == 'b': #busca

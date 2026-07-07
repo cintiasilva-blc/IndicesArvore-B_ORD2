@@ -277,7 +277,7 @@ def imprimeArvoreB(nomeArqB:str):
             
             #percorre as paginas em ordem de rrn e imprime as chaves, offsets e filhos de cada página, além de identificar a raiz
             for rrn in range(num_pag):
-                pag = lePagina(nomeArqB, rrn)
+                pag = lePagina(arq, rrn)
                 
                 if rrn == rrn_raiz:
                     print('-------------- Raiz --------------')
@@ -293,28 +293,26 @@ def imprimeArvoreB(nomeArqB:str):
 def criaIndice():
     try:
         gamesDat = open("games.dat", "rb")
+        gamesDat.close()
     except FileNotFoundError:
         print("Erro: não foi possível abrir o arquivo games.dat!")
         return
+    
     arvB = open("btree.dat", "w+b")
 
     # árvore inicialmente vazia
     raiz = None
     escreveCabecalho(arvB, raiz)
 
-    fimArq = False
-    while not fimArq:
-        #offset do próximo registro
-        offset = gamesDat.tell()
-        # lê um registro
-        registros = operacoes.leRegistros("games.dat")
-        for registro, offset in registros:
-            chave = int(registro.split('|')[0])
-            raiz = insereNaArvore(arvB, chave, offset, raiz)
-        if not fimArq:
-            raiz = insereNaArvore(arvB,chave,offset,raiz)
+    # lê todos os registros de uma vez
+    registros = operacoes.leRegistros("games.dat")
+    for registro, offset in registros:
+        chave = int(registro.split('|')[0])
+        raiz = insereNaArvore(arvB, chave, offset, raiz)
+
     # atualiza o cabeçalho
     escreveCabecalho(arvB, raiz)
+    arvB.close()
 
     print("Índice criado com sucesso.")
 
@@ -342,6 +340,4 @@ def main()-> None:
 
 if __name__ == "__main__":
     main()
-    
-
     

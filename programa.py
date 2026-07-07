@@ -25,6 +25,9 @@ def leCabecalho(arvB) -> int:
     '''
     '''
 
+=======
+    '''Retorna o *rrn* da página raiz (None se *arvB* estiver vazia.)'''
+>>>>>>> Stashed changes
     arvB.seek(0, io.SEEK_SET)
     rrn = unpack(FORMATO_CAB, arvB.read(TAM_CAB))[0]
     return rrn
@@ -291,6 +294,7 @@ def imprimeArvoreB(nomeArqB:str):
 # ============================= CRIA INDICE ==========================
 
 def criaIndice():
+    '''Função responsável por criar o arquivo btree.dat a partir do arquivo games.dat.'''
     try:
         gamesDat = open("games.dat", "rb")
         gamesDat.close()
@@ -321,7 +325,7 @@ def main()-> None:
     '''Função responsável por abrir ou criar o arquivo da arvoreB e chamar a inserção.'''
     # Abre o arquivo para ser utilizado nas funções
     if len(sys.argv) < 2:
-        print("Uso: python programa.py -b | -e arquivoOperacoes | -p")
+        print("Uso: python programa.py -b | -e nomeArquivoOperacoes | -p")
         return
 
     flag = sys.argv[1]

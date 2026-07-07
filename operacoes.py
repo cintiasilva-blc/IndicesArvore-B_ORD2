@@ -52,16 +52,17 @@ def inserirRegistro(campos, nomeArq) -> int:
     return offset
 
 
-def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):
+def executaOperacoes(nomeArvB:str, nomeArquivo:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
     with open(nomeArqOperacoes, 'r') as arq:
         # encontra o primeiro espaço para separar o identificador do argumento
         for linha in arq:
             i = 0
-            while i < len(linha) and linha[i] == ' ':
+            tam = len(linha)
+            while i < tam and linha[i] == ' ':
                 i += 1
 
-            op = linha[:i]
+            op = linha[:i+1]
             arg = linha[i + 1:]
             
             #remove o \n do final
@@ -71,7 +72,7 @@ def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):
             if op == 'b': #busca
                 id = int(arg)
                 print(f'Busca pelo registro de chave "{id}"')
-                programa.buscaNaArvore(id, programa.raiz)
+                programa.buscaNaArvore(nomeArvB, id, raiz)
                 if id == None:
                     print(f'Erro: chave "{id}" não encontrada.')
                 print()
@@ -79,19 +80,20 @@ def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):
             elif op == 'i': #inserção
                 campos = arg.split('|')[:-1]
                 id = int(campos[0])
-                offset = programa.buscaNaArvore(id, programa.raiz)
+                offset = programa.buscaNaArvore(nomeArvB, id, raiz)
                 if offset != None:
                     print(f'Erro: chave "{id}" duplicada.')
                 else:
                     print(f'Inserção do registro de chave "{id}"')
-                    programa.raiz = programa.insereNaArvore((id, int(campos[1])), programa.raiz)
+                    raiz = programa.insereNaArvore(nomeArvB, id, int(campos[1]), raiz)
                     programa.inserirRegistro(campos, nomeArquivo)
 
                 print()
         print(f'As operações do arquivo "{nomeArqOperacoes}" foram executadas com sucesso!')
 
 if __name__ == '__main__':
+    nomeArvB = 'btree.dat'
     nomeArquivo = 'games.dat'
     nomeArqOperacoes = 'operacoes.txt'
-    executaOperacoes(nomeArquivo, nomeArqOperacoes)
+    executaOperacoes(nomeArvB, nomeArquivo, nomeArqOperacoes)
  

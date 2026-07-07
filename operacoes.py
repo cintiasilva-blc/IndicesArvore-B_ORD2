@@ -26,7 +26,7 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
             tam = int.from_bytes(tam_b, 'little') # transforma o tam do registro de byte para inteiro        
         return registros
 
-def le_registro(nomeArq, offset: int) -> tuple[str, int]:
+def le_UM_registro(nomeArq, offset: int) -> tuple[str, int]:
     '''Lê um único registro a partir de um byte-offset.
     Retorna a string do registro e o total de bytes ocupados (2 bytes do tamanho + o registro em si).'''
     with open(nomeArq, 'rb') as arq:
@@ -89,9 +89,8 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
                 print(f'\nBusca pelo registro de chave "{id}"')
                 achou, offset = programa.buscaNaArvore(arvB, id, raiz)
                 if achou:
-                    reg_str, tam_total = le_registro(nomeArq, offset)
+                    reg_str, tam_total = le_UM_registro(nomeArq, offset)
                     print(f'{reg_str} ({tam_total} bytes - offset {offset})')
-
                 else:
                     print(f'Erro: chave "{id}" não encontrada.')
                 print()

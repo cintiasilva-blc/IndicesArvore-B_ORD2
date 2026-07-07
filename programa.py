@@ -4,7 +4,7 @@ import io
 import sys
 import operacoes
 
-ORDEM = 5 # Num. máx. de refeências = Num. máx. de descendentes
+ORDEM = 10 # Num. máx. de refeências = Num. máx. de descendentes
 
 FORMATO_PAG = f'i{ORDEM-1}i{ORDEM}i{ORDEM-1}i'
 TAM_PAG = calcsize(FORMATO_PAG)
@@ -160,7 +160,7 @@ def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
 def buscaNaArvore(arvB, chave: int, rrn: int) -> tuple[bool, int]:
     '''Busca *chave* na *arvB*, a partir da página *rrn*.
     Retorna (True, offset) se achou, ou (False, -1) se não.
-    Exemplos:
+    Exemplo:
     >>> with open('btree.dat', 'rb') as arvB:
     ...     buscaNaArvore(arvB, 484, 29)
     (True, 0)

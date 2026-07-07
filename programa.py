@@ -262,30 +262,17 @@ def imprimeArvoreB(nomeArqB:str):
             arq.seek(0, io.SEEK_END)
             tam_arq = arq.tell()
             num_pag = (tam_arq - TAM_CAB) // TAM_PAG
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
+
             
             #percorre as paginas em ordem de rrn e imprime as chaves, offsets e filhos de cada página, além de identificar a raiz
             for rrn in range(num_pag):
                 pag = lePagina(arq, rrn)
-                
-=======
-=======
->>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
->>>>>>> Stashed changes
+
 
             #le e imprime cada página do arquivo
             for rrn in range(0, num_pag - 1):
                 pag = lePagina(arq, rrn)
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
->>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
-=======
->>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
->>>>>>> Stashed changes
+
                 if rrn == rrn_raiz:
                     print('----------------------- Raiz -----------------------')
                     print(f'Página {rrn}: ')
@@ -321,19 +308,8 @@ def criaIndice():
     escreveCabecalho(arvB, raiz)
 
     # lê todos os registros de uma vez
-<<<<<<< Updated upstream
-    registros = operacoes.leRegistros("games.dat")
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
     registros = operacoes.le_registros("games.dat")
-=======
-    registros = operacoes.leRegistros("games.dat")
->>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
-=======
-    registros = operacoes.leRegistros("games.dat")
->>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
->>>>>>> Stashed changes
+
     for registro, offset in registros:
         chave = int(registro.split('|')[0])
         raiz = insereNaArvore(arvB, chave, offset, raiz)

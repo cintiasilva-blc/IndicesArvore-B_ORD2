@@ -22,6 +22,7 @@ class Pagina:
 # ============================ CABEÇALHO ==============================
 
 def leCabecalho(arvB) -> int:
+<<<<<<< Updated upstream
     '''
     '''
 

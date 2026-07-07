@@ -332,6 +332,7 @@ def main()-> None:
             print("Informe o arquivo de operações.")
             return
         operacoes.executaOperacoes("games.dat", sys.argv[2])
+        operacoes.executaOperacoes("btree.dat", "games.dat", sys.argv[2])
     elif flag == "-p":
         imprimeArvoreB("btree.dat")
     else:

@@ -27,6 +27,17 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
         return registros
 
 def escreverRegistro(arq, campos:list[str]) -> int:
+def leRegistro(nomeArq, offset) -> str:
+    '''Lê um único registro do arquivo games.dat a partir do offset informado e retorna sua string.'''
+    with open(nomeArq, 'rb') as arq:
+        arq.seek(offset)
+        tam_b = arq.read(2)
+        tam = int.from_bytes(tam_b, 'little')
+        reg = arq.read(tam)
+        return reg.decode()
+
+
+def escreverRegistro(nomeArq, campos:list[str]) -> int:
     '''Recebe um arquivo e uma lista de campos do registro, monta a string do registro,
     calcula o tamanho e escreve os 2 bytes de tamanhos seguidos do conteúdo no arquivo. '''
    
@@ -38,6 +49,10 @@ def escreverRegistro(arq, campos:list[str]) -> int:
 
     arq.write(tam_b) #escreve o tam do registro
     arq.write(reg_b) # escreve o rgeistro
+    with open(nomeArq, 'rb+') as arq:
+        arq.seek(0, 2) # vai para o final do arquivo
+        arq.write(tam_b) #escreve o tam do registro
+        arq.write(reg_b) # escreve o rgeistro
 
     return 2 + tam # retorna o total de bytes escritos
 
@@ -49,31 +64,47 @@ def inserirRegistro(campos, nomeArq) -> int:
         arq.seek(0, 2) #vai para o final do arq
         offset = arq.tell() # offset do novo registro
         escreverRegistro(arq, campos) # escreve o novo registro no final do arq
+    escreverRegistro(arq, campos) # escreve o novo registro no final do arq
     return offset
 
 
 def executaOperacoes(nomeArvB:str, nomeArquivo:str, nomeArqOperacoes:str):
+def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
     with open(nomeArqOperacoes, 'r') as arq:
+    with open(nomeArqOperacoes, 'r') as arq, open(nomeArvB, 'rb') as arvB:
+        raiz = programa.leCabecalho(arvB)
         # encontra o primeiro espaço para separar o identificador do argumento
         for linha in arq:
             i = 0
             tam = len(linha)
             while i < tam and linha[i] == ' ':
+            while i < tam and linha[i] != ' ':
                 i += 1
 
             op = linha[:i+1]
+            op = linha[:i]
             arg = linha[i + 1:]
             
             #remove o \n do final
             if arg != "" and arg[-1] == '\n':
+            if arg != '' and arg[-1] == '\n':
                 arg = arg[:-1]
+            
+            campos = arg.split('|')
+            if campos and campos[-1] == '':
+                campos = campos[:-1]
+            reg = f'{campos[0]}|{campos[1]}|{campos[2]}|{campos[3]}|{campos[4]}|{campos[5]}|'
 
             if op == 'b': #busca
                 id = int(arg)
                 print(f'Busca pelo registro de chave "{id}"')
                 programa.buscaNaArvore(nomeArvB, id, raiz)
                 if id == None:
+                achou, offset = programa.buscaNaArvore(arvB, id, raiz)
+                if achou:
+                    print(reg)
+                else:
                     print(f'Erro: chave "{id}" não encontrada.')
                 print()
 
@@ -87,6 +118,10 @@ def executaOperacoes(nomeArvB:str, nomeArquivo:str, nomeArqOperacoes:str):
                     print(f'Inserção do registro de chave "{id}"')
                     raiz = programa.insereNaArvore(nomeArvB, id, int(campos[1]), raiz)
                     programa.inserirRegistro(campos, nomeArquivo)
+                    print(le_registros)
+                    offset = inserirRegistro(campos, nomeArq)
+                    raiz = programa.insereNaArvore(nomeArvB, id, offset, raiz)
+                    programa.escreveCabecalho(arvB, raiz)
 
                 print()
         print(f'As operações do arquivo "{nomeArqOperacoes}" foram executadas com sucesso!')
@@ -94,6 +129,8 @@ def executaOperacoes(nomeArvB:str, nomeArquivo:str, nomeArqOperacoes:str):
 if __name__ == '__main__':
     nomeArvB = 'btree.dat'
     nomeArquivo = 'games.dat'
+    nomeArq = 'games.dat'
     nomeArqOperacoes = 'operacoes.txt'
     executaOperacoes(nomeArvB, nomeArquivo, nomeArqOperacoes)
+    executaOperacoes(nomeArvB, nomeArq, nomeArqOperacoes)
  

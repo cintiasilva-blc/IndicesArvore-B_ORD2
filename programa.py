@@ -285,10 +285,6 @@ def imprimeArvoreB(nomeArqB:str):
     "Le o arquivo btree.dat e faz a impressão da arvore B, pela ordem de seu RRN, além disso, a raiz deve ser devidamente identificada."    
     try: #se o arquvivo não exister ele coloca uma mensagem de erro
         with open(nomeArqB, 'rb') as arq:
-            #le o cabecalho
-            cab_bytes = arq.read(TAM_CAB)
-            cabecalho = unpack(FORMATO_CAB, cab_bytes) #transforma os bytes para inteiros
-            rrn_raiz = cabecalho[0] #permite identificar a raiz , pq o rrn da raiz é o primeiro elemento do cabecalho
             #permite identificar a raiz , pq o rrn da raiz é o primeiro elemento do cabecalho
             rrn_raiz = leCabecalho(arq)
             
@@ -296,19 +292,11 @@ def imprimeArvoreB(nomeArqB:str):
             arq.seek(0, io.SEEK_END)
             tam_arq = arq.tell()
             num_pag = (tam_arq - TAM_CAB) // TAM_PAG
-            
-            #percorre as paginas em ordem de rrn e imprime as chaves, offsets e filhos de cada página, além de identificar a raiz
-            for rrn in range(num_pag):
 
             #le e imprime cada página do arquivo
             for rrn in range(0, num_pag - 1):
                 pag = lePagina(arq, rrn)
-                
                 if rrn == rrn_raiz:
-                    print('-------------- Raiz --------------')
-                    
-                print(f'Página <{rrn}>:\n\tChaves: {pag.chaves}\n\tOffsets: {pag.offsets}\n\tFilhos: {pag.filhos}')
-                print('----------------------------------')
                     print('----------------------- Raiz -----------------------')
                     print(f'Página {rrn}: ')
                     print(f'Chaves = {separaLista(pag.chaves)}')
@@ -316,7 +304,7 @@ def imprimeArvoreB(nomeArqB:str):
                     print(f'Filhos = {separaLista(pag.filhos)}')
                     print('----------------------------------------------------')
                 else:
-                    print(f'Página {rrn}: ')
+                    print(f'\nPágina {rrn}: ')
                     print(f'Chaves = {separaLista(pag.chaves)}')
                     print(f'Offsets = {separaLista(pag.offsets)}')
                     print(f'Filhos = {separaLista(pag.filhos)}')

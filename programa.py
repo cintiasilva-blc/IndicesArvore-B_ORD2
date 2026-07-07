@@ -22,13 +22,27 @@ class Pagina:
 # ============================ CABEÇALHO ==============================
 
 def leCabecalho(arvB) -> int:
-    '''Retorna o *rrn* da página raiz (None se *arvB* estiver vazia.)'''
+    '''Retorna o RRN da página raiz salvo no cabeçalho de *arvB*.
+    Exemplos:
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     leCabecalho(arvB)
+    29
+    '''
+    
     arvB.seek(0, io.SEEK_SET)
     rrn = unpack(FORMATO_CAB, arvB.read(TAM_CAB))[0]
     return rrn
 
 def escreveCabecalho(arvB, rrn: int) -> None:
-    ''''''
+    '''Grava *rrn* no cabeçalho de *arvB*.
+    Exemplos:
+    >>> with open('btree.dat', 'rb+') as arvB:
+    ...     raiz_original = leCabecalho(arvB)
+    ...     escreveCabecalho(arvB, 99)
+    ...     leCabecalho(arvB)
+    ...     escreveCabecalho(arvB, raiz_original)
+    99
+    '''
 
     arvB.seek(0, io.SEEK_SET)
     cab_bytes = pack(FORMATO_CAB, rrn)
@@ -36,7 +50,20 @@ def escreveCabecalho(arvB, rrn: int) -> None:
 
 # =========================== LEITURA/ESCRITA DE PÁGINA ===============================
 def lePagina(arvB, rrn: int) -> Pagina:
-        
+    '''Lê e retorna a página de *rrn* do arquivo *arvB*.
+
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     pag = lePagina(arvB, 29)
+    >>> pag.numChaves
+    3
+    >>> pag.chaves
+    [313, 538, 780, -1]
+    >>> pag.filhos
+    [8, 56, 28, 51, -1]
+    >>> pag.offsets
+    [805, 1012, 3057, -1]
+    '''
+
     # calcula o byte-offset da página a partir de *rrn*
     offset = rrn * TAM_PAG + TAM_CAB 
     # faz seek no arquivo árvore-B para o byte-offset calculado
@@ -62,7 +89,18 @@ def lePagina(arvB, rrn: int) -> Pagina:
     return nova_pag
 
 def escrevePagina(arvB, rrn: int, pag: Pagina) -> None:
-
+    '''Grava *pag* no arquivo *arvB*, na posição do *rrn*.
+    Exemplos:
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     pag_original = lePagina(arvB, 29)
+    ...     pag_teste = Pagina()
+    ...     pag_teste.numChaves = 1
+    ...     pag_teste.chaves[0] = 777
+    ...     escrevePagina(arvB, 29, pag_teste)
+    ...     lePagina(arvB, 29).chaves
+    ...     escrevePagina(arvB, 29, pag_original)
+    [777, -1, -1, -1]
+    '''
     # calcula o byte-offset da página a partir do *rrn*
     offset = rrn * TAM_PAG + TAM_CAB
     # faz seek no arquivo árvore-B para o byte-offset calculado
@@ -81,6 +119,12 @@ def escrevePagina(arvB, rrn: int, pag: Pagina) -> None:
     arvB.write(pag_bytes)
 
 def novoRRN(arvB) -> int:
+    '''Retorna o próximo rrn livre em *arvB* (com base no tamanho do arquivo).
+    Exemplos:
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     novoRRN(arvB)
+    58
+    '''
 
     arvB.seek(0, io.SEEK_END)
     offset = arvB.tell()
@@ -89,8 +133,15 @@ def novoRRN(arvB) -> int:
 # ================================= BUSCA =================================
 
 def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
-    '''Busca *chave* em *pag* (busca a chave internamente na pagina)
+    '''Busca chave dentro de pag (sem descer para os filhos). Retorna (True, posição) se achou a chave na página, ou 
+    (False, posição do filho por onde a busca deve continuar).
     Exemplos:
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     pag = lePagina(arvB, 29)
+    >>> buscaNaPagina(538, pag)
+    (True, 1)
+    >>> buscaNaPagina(100, pag)
+    (False, 0)
     '''
 
     # Percorre a pagina até o fim ou até encontrar uma chave <= a chave do parametro
@@ -106,7 +157,17 @@ def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
         return False, pos
 
 
-def buscaNaArvore(arvB, chave: int, rrn):
+def buscaNaArvore(arvB, chave: int, rrn: int) -> tuple[bool, int]:
+    '''Busca *chave* na *arvB*, a partir da página *rrn*.
+    Retorna (True, offset) se achou, ou (False, -1) se não.
+    Exemplos:
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     buscaNaArvore(arvB, 484, 29)
+    (True, 0)
+    >>> with open('btree.dat', 'rb') as arvB:
+    ...     buscaNaArvore(arvB, 999999, 29)
+    (False, -1)
+    '''
 
     if rrn == -1:                # CASO BASE, condição de parada da recusão
         return False, -1
@@ -123,10 +184,24 @@ def buscaNaArvore(arvB, chave: int, rrn):
 # ================== INSERÇÃO, DIVISÃO E PROMOÇÃO =====================
 
 def insereChavePromo(chave: int, offset: int, filhoD: int, pag: Pagina):
+    '''Insere *chave* (com *offset e filhoD*) na posição ordenada certa em *pag*.
+    Exemplos:
+    >>> pag = Pagina()
+    >>> pag.numChaves = 2
+    >>> pag.chaves[0], pag.chaves[1] = 100, 300
+    >>> pag.offsets[0], pag.offsets[1] = 10, 30
+    >>> insereChavePromo(200, 20, -1, pag)
+    >>> pag.numChaves
+    3
+    >>> pag.chaves
+    [100, 200, 300, -1]
+    >>> pag.offsets
+    [10, 20, 30, -1]
+    '''
     if pag.numChaves == (ORDEM - 1):
-        pag.chaves.append(None)
-        pag.filhos.append(None)
-        pag.offsets.append(None)
+        pag.chaves.append(-1)
+        pag.filhos.append(-1)
+        pag.offsets.append(-1)
 
     i = pag.numChaves
     while i > 0 and chave < pag.chaves[i-1]:
@@ -139,7 +214,10 @@ def insereChavePromo(chave: int, offset: int, filhoD: int, pag: Pagina):
     pag.filhos[i+1] = filhoD
     pag.numChaves += 1
 
-def divide(arvB, chave: int, offset: int, filhoD: int, pag: Pagina):
+def divide(arvB, chave: int, offset: int, filhoD: int, pag: Pagina) -> tuple[int, int, int, Pagina, Pagina]:
+    '''Divide uma página cheia ao inserir mais uma chave nela.
+    Retorna a chave que sobe pro pai, o RRN da nova página irmã,
+    e as duas metades resultantes (pAtual e pNova).'''
 
     # insere chave, offset e filhoD em pag
     insereChavePromo(chave, offset, filhoD, pag)
@@ -177,7 +255,12 @@ def divide(arvB, chave: int, offset: int, filhoD: int, pag: Pagina):
 
     return chavePro, offsetPro, filhoDpro, pAtual, pNova
 
-def insereChave(arvB, chave: int, offset: int, rrnAtual: int):
+def insereChave(arvB, chave: int, offset: int, rrnAtual: int) -> tuple[int, int, int, bool]:
+    '''Insere chave/offset na subárvore de raiz rrnAtual, descendo até uma
+    folha e subindo uma divisão se precisar. Retorna
+    (chavePro, offsetPro, filhoDPro, promo): se promo é True, uma chave
+    subiu e o chamador precisa inseri-la um nível acima.'''
+
     # Se a chave for inserida com sucesso, a função retorna Verdadeiro, o RRN da página onde a chave foi inserida, e a posição da chave.
     # Se a chave não for inserida, a função retorna Falso, nulo, e nulo.
 
@@ -207,7 +290,8 @@ def insereChave(arvB, chave: int, offset: int, rrnAtual: int):
                 return chavePro, offsetPro, filhoDPro, True
 
 def insereNaArvore(arvB, chave: int, offset: int, raiz:int):
-    '''Insere uma chave na árvore B e atualiza a raiz se necessário.'''
+    '''Insere *chave/offset* na árvore B a partir da página *raiz*.
+    Retorna o RRN da raiz (muda se houve divisão até o topo).'''
 
     chavePro, offsetPro, filhoDPro, promo = insereChave(arvB, chave, offset, raiz)
     if promo:
@@ -285,6 +369,7 @@ def imprimeArvoreB(nomeArqB:str):
 
 def criaIndice():
     '''Função responsável por criar o arquivo btree.dat a partir do arquivo games.dat.'''
+    
     try:
         gamesDat = open("games.dat", "rb")
         gamesDat.close()
@@ -293,22 +378,22 @@ def criaIndice():
         return
     
     arvB = open("btree.dat", "w+b")
-
+ 
     # árvore inicialmente vazia
     raiz = -1
     escreveCabecalho(arvB, raiz)
-
+ 
     # lê todos os registros de uma vez
     registros = operacoes.le_registros("games.dat")
-
+ 
     for registro, offset in registros:
         chave = int(registro.split('|')[0])
         raiz = insereNaArvore(arvB, chave, offset, raiz)
-
+ 
     # atualiza o cabeçalho
     escreveCabecalho(arvB, raiz)
     arvB.close()
-
+ 
     print("Índice criado com sucesso.")
 
 def main()-> None:

@@ -88,7 +88,7 @@ def executaOperacoes(nomeArquivo:str, nomeArqOperacoes:str):
                     programa.inserirRegistro(campos, nomeArquivo)
 
                 print()
-            print(f'As operações do arquivo "{nomeArqOperacoes}" foram executadas com sucesso!')
+        print(f'As operações do arquivo "{nomeArqOperacoes}" foram executadas com sucesso!')
 
 if __name__ == '__main__':
     nomeArquivo = 'games.dat'

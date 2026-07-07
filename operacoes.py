@@ -26,6 +26,17 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
             tam = int.from_bytes(tam_b, 'little') # transforma o tam do registro de byte para inteiro        
         return registros
 
+def le_registro(arq, offset: int) -> tuple[str, int]:
+    '''Lê um único registro a partir de um byte-offset, em um arquivo já aberto para leitura.
+    Retorna a string do registro e o total de bytes ocupados (2 bytes do tamanho + o registro em si).'''
+    arq.seek(offset)
+    tam_b = arq.read(2)
+    tam = int.from_bytes(tam_b, 'little')
+    reg = arq.read(tam)
+    reg_str = reg.decode()
+    return reg_str, 2 + tam
+
+
 def escreverRegistro(nomeArq, campos:list[str]) -> int:
     '''Recebe um arquivo e uma lista de campos do registro, monta a string do registro,
     calcula o tamanho e escreve os 2 bytes de tamanhos seguidos do conteúdo no arquivo. '''
@@ -36,26 +47,33 @@ def escreverRegistro(nomeArq, campos:list[str]) -> int:
     tam = len(reg_b) # verifica o tamanho do registro
     tam_b = tam.to_bytes(2, 'little')
 
-    with open(nomeArq, 'rb+') as arq:
-        arq.seek(0, 2) # vai para o final do arquivo
-        arq.write(tam_b) #escreve o tam do registro
-        arq.write(reg_b) # escreve o rgeistro
+    nomeArq.write(tam_b) #escreve o tam do registro
+    nomeArq.write(reg_b) # escreve o rgeistro
 
     return 2 + tam # retorna o total de bytes escritos
 
-def inserirRegistro(campos, nomeArq) -> int:
+def inserirRegistro(campos, nomeArq) -> tuple[int, int]:
     ''' Insere um novo registro no final do arquivo games.dat'''
 
     with open(nomeArq, 'rb+') as arq:
         arq.seek(0, 2) #vai para o final do arq
         offset = arq.tell() # offset do novo registro
-    escreverRegistro(arq, campos) # escreve o novo registro no final do arq
-    return offset
+        tam_total = escreverRegistro(arq, campos) # escreve o novo registro no final do arq
+    return offset, tam_total
 
 
 
 def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
+    try:
+        testeArvB = open(nomeArvB, 'rb')
+        testeArvB.close()
+        testeArq = open(nomeArq, 'rb')
+        testeArq.close()
+    except FileNotFoundError:
+        print(f'Erro: os arquivos "{nomeArvB}" e/ou "{nomeArq}" não existem.')
+        return
+    
     with open(nomeArqOperacoes, 'r') as arq, open(nomeArvB, 'rb') as arvB:
         raiz = programa.leCabecalho(arvB)
         # encontra o primeiro espaço para separar o identificador do argumento
@@ -66,7 +84,6 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
             while i < tam and linha[i] != ' ':
                 i += 1
 
-            op = linha[:i+1]
             op = linha[:i]
             arg = linha[i + 1:]
             
@@ -74,15 +91,10 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
             if arg != '' and arg[-1] == '\n':
                 arg = arg[:-1]
             
-            campos = arg.split('|')
-            if campos and campos[-1] == '':
-                campos = campos[:-1]
-            reg = f'{campos[0]}|{campos[1]}|{campos[2]}|{campos[3]}|{campos[4]}|{campos[5]}|'
 
             if op == 'b': #busca
                 id = int(arg)
                 print(f'Busca pelo registro de chave "{id}"')
-                programa.buscaNaArvore(nomeArvB, id, raiz)
                 achou, offset = programa.buscaNaArvore(arvB, id, raiz)
                 if achou:
                     print(reg)

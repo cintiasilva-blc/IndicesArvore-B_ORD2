@@ -26,17 +26,6 @@ def le_registros(nomeArq) -> list[tuple[str, int]]:
             tam = int.from_bytes(tam_b, 'little') # transforma o tam do registro de byte para inteiro        
         return registros
 
-def escreverRegistro(arq, campos:list[str]) -> int:
-def leRegistro(nomeArq, offset) -> str:
-    '''Lê um único registro do arquivo games.dat a partir do offset informado e retorna sua string.'''
-    with open(nomeArq, 'rb') as arq:
-        arq.seek(offset)
-        tam_b = arq.read(2)
-        tam = int.from_bytes(tam_b, 'little')
-        reg = arq.read(tam)
-        return reg.decode()
-
-
 def escreverRegistro(nomeArq, campos:list[str]) -> int:
     '''Recebe um arquivo e uma lista de campos do registro, monta a string do registro,
     calcula o tamanho e escreve os 2 bytes de tamanhos seguidos do conteúdo no arquivo. '''
@@ -68,17 +57,16 @@ def inserirRegistro(campos, nomeArq) -> int:
     return offset
 
 
-def executaOperacoes(nomeArvB:str, nomeArquivo:str, nomeArqOperacoes:str):
+
 def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
-    with open(nomeArqOperacoes, 'r') as arq:
     with open(nomeArqOperacoes, 'r') as arq, open(nomeArvB, 'rb') as arvB:
         raiz = programa.leCabecalho(arvB)
         # encontra o primeiro espaço para separar o identificador do argumento
         for linha in arq:
             i = 0
             tam = len(linha)
-            while i < tam and linha[i] == ' ':
+    
             while i < tam and linha[i] != ' ':
                 i += 1
 
@@ -87,7 +75,6 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
             arg = linha[i + 1:]
             
             #remove o \n do final
-            if arg != "" and arg[-1] == '\n':
             if arg != '' and arg[-1] == '\n':
                 arg = arg[:-1]
             
@@ -100,7 +87,6 @@ def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
                 id = int(arg)
                 print(f'Busca pelo registro de chave "{id}"')
                 programa.buscaNaArvore(nomeArvB, id, raiz)
-                if id == None:
                 achou, offset = programa.buscaNaArvore(arvB, id, raiz)
                 if achou:
                     print(reg)
@@ -131,6 +117,5 @@ if __name__ == '__main__':
     nomeArquivo = 'games.dat'
     nomeArq = 'games.dat'
     nomeArqOperacoes = 'operacoes.txt'
-    executaOperacoes(nomeArvB, nomeArquivo, nomeArqOperacoes)
     executaOperacoes(nomeArvB, nomeArq, nomeArqOperacoes)
  

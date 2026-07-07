@@ -22,19 +22,16 @@ class Pagina:
 # ============================ CABEÇALHO ==============================
 
 def leCabecalho(arvB) -> int:
-    '''Retorna o *rrn* da página raiz (None se *arvB* estiver vazia.)'''
+    '''
+    '''
 
     arvB.seek(0, io.SEEK_SET)
     rrn = unpack(FORMATO_CAB, arvB.read(TAM_CAB))[0]
-
-    if rrn == -1:
-        return None
     return rrn
 
 def escreveCabecalho(arvB, rrn: int) -> None:
+    ''''''
 
-    if rrn == None:
-        rrn = -1
     arvB.seek(0, io.SEEK_SET)
     cab_bytes = pack(FORMATO_CAB, rrn)
     arvB.write(cab_bytes)
@@ -57,29 +54,12 @@ def lePagina(arvB, rrn: int) -> Pagina:
     nova_pag.numChaves = elementos_pag[i]
     i +=1
 
-    nova_pag.chaves = []
-    for _ in range(ORDEM - 1):
-        if elementos_pag[i] == -1:
-            nova_pag.chaves.append(None)
-        else:
-            nova_pag.chaves.append(elementos_pag[i])
-        i += 1
-
-    nova_pag.filhos = []
-    for _ in range(ORDEM):
-        if elementos_pag[i] == -1:
-            nova_pag.filhos.append(None)
-        else:
-            nova_pag.filhos.append(elementos_pag[i])
-        i += 1
-
-    nova_pag.offsets = []
-    for _ in range(ORDEM - 1):
-        if elementos_pag[i] == -1:
-            nova_pag.offsets.append(None)
-        else:
-            nova_pag.offsets.append(elementos_pag[i])
-        i += 1
+    nova_pag.chaves = list(elementos_pag[i:i + (ORDEM - 1)])
+    i += (ORDEM - 1)
+    nova_pag.filhos = list(elementos_pag[i:i + ORDEM])
+    i += ORDEM
+    nova_pag.offsets = list(elementos_pag[i:i + (ORDEM - 1)])
+    i += (ORDEM - 1)
     
     return nova_pag
 
@@ -91,26 +71,16 @@ def escrevePagina(arvB, rrn: int, pag: Pagina) -> None:
     arvB.seek(offset, io.SEEK_SET)
 
     # escreve pag_bytes no arquivo arvB
-    valores = []
-    valores.append(pag.numChaves)
+    valores = [pag.numChaves]
 
     for chave in pag.chaves:
-        if chave is None:
-            valores.append(-1)
-        else:
-            valores.append(chave)
+        valores.append(chave)
 
     for filho in pag.filhos:
-        if filho is None:
-            valores.append(-1)
-        else:
-            valores.append(filho)
+        valores.append(filho)
 
     for off in pag.offsets:
-        if off is None:
-            valores.append(-1)
-        else:
-            valores.append(off)
+        valores.append(off)
 
     pag_bytes = pack(FORMATO_PAG, *valores) # * desempacota a lista como argumentos posicionais
     arvB.write(pag_bytes)
@@ -143,8 +113,8 @@ def buscaNaPagina(chave: int, pag: Pagina) -> tuple[bool, int]:
 
 def buscaNaArvore(arvB, chave: int, rrn):
 
-    if rrn == None:                # CASO BASE, condição de parada da recusão
-        return False, None
+    if rrn == -1:                # CASO BASE, condição de parada da recusão
+        return False, -1
     else:
         pag = lePagina(arvB, rrn)
         achou, pos = buscaNaPagina(chave, pag)
@@ -217,7 +187,7 @@ def insereChave(arvB, chave: int, offset: int, rrnAtual: int):
     # Se a chave não for inserida, a função retorna Falso, nulo, e nulo.
 
     # condição de parada da recursão
-    if rrnAtual == None:
+    if rrnAtual == -1:
         chavePro = chave
         offsetPro = offset
         filhoDPro = -1
@@ -292,10 +262,30 @@ def imprimeArvoreB(nomeArqB:str):
             arq.seek(0, io.SEEK_END)
             tam_arq = arq.tell()
             num_pag = (tam_arq - TAM_CAB) // TAM_PAG
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+            
+            #percorre as paginas em ordem de rrn e imprime as chaves, offsets e filhos de cada página, além de identificar a raiz
+            for rrn in range(num_pag):
+                pag = lePagina(arq, rrn)
+                
+=======
+=======
+>>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
+>>>>>>> Stashed changes
 
             #le e imprime cada página do arquivo
             for rrn in range(0, num_pag - 1):
                 pag = lePagina(arq, rrn)
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+>>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
+=======
+>>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
+>>>>>>> Stashed changes
                 if rrn == rrn_raiz:
                     print('----------------------- Raiz -----------------------')
                     print(f'Página {rrn}: ')
@@ -327,11 +317,23 @@ def criaIndice():
     arvB = open("btree.dat", "w+b")
 
     # árvore inicialmente vazia
-    raiz = None
+    raiz = -1
     escreveCabecalho(arvB, raiz)
 
     # lê todos os registros de uma vez
+<<<<<<< Updated upstream
     registros = operacoes.leRegistros("games.dat")
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    registros = operacoes.le_registros("games.dat")
+=======
+    registros = operacoes.leRegistros("games.dat")
+>>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
+=======
+    registros = operacoes.leRegistros("games.dat")
+>>>>>>> 6015fed131d473c551d0002d35e3ae0dd592d3a6
+>>>>>>> Stashed changes
     for registro, offset in registros:
         chave = int(registro.split('|')[0])
         raiz = insereNaArvore(arvB, chave, offset, raiz)

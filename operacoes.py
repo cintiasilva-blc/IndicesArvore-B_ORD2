@@ -1,10 +1,10 @@
 import programa
 
-def leRegistros(nomeArq) -> list[tuple[str, int]]:
+def le_registros(nomeArq) -> list[tuple[str, int]]:
     '''Percorre o arquivo inteiro e retorna todos os registros.
     Para cada registro, lê 2 bytes para saber o tamanho e adiciona a string do registro e seu offset na lista de retorno.
     Exemplos:
-    >>> registros = leRegistros('games.dat')
+    >>> registros = le_registros('games.dat')
     >>> registros[0]
     ('484|The Legend of Zelda: Breath of the Wild|2017|Action-Adventure|Nintendo|Nintendo Switch|', 0)
     >>> registros[1]

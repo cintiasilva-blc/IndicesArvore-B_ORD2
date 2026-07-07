@@ -389,16 +389,15 @@ def criaIndice():
     for registro, offset in registros:
         chave = int(registro.split('|')[0])
         raiz = insereNaArvore(arvB, chave, offset, raiz)
- 
-    # atualiza o cabeçalho
-    escreveCabecalho(arvB, raiz)
+        # atualiza o cabeçalho (a cada inserção)
+        escreveCabecalho(arvB, raiz)
     arvB.close()
  
     print("Índice criado com sucesso.")
 
 def main()-> None:
     '''Função responsável por abrir ou criar o arquivo da arvoreB e chamar a inserção.'''
-    # Abre o arquivo para ser utilizado nas funções
+
     if len(sys.argv) < 2:
         print("Uso: python programa.py -b | -e nomeArquivoOperacoes | -p")
         return

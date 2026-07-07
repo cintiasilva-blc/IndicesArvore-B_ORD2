@@ -65,8 +65,13 @@ def inserirRegistro(campos, nomeArq) -> tuple[int, int]:
 
 def executaOperacoes(nomeArvB:str, nomeArq:str, nomeArqOperacoes:str):
     '''Executa as operações de inserção e busca em uma árvore B a partir de um arquivo de operações.'''
+    try:
+        arq = open(nomeArqOperacoes, "r")
+        arvB= open(nomeArvB, "r+b")
+    except FileNotFoundError:
+        print("Erro: os arquivos prescisam para executar as operações.")
     
-    with open(nomeArqOperacoes, 'r') as arq, open(nomeArvB, 'r+b') as arvB:
+    with arq, arvB:
         raiz = programa.leCabecalho(arvB)
         # encontra o primeiro espaço para separar o identificador do argumento
         for linha in arq:
